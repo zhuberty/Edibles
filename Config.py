@@ -59,6 +59,10 @@ class Config(Scene):
         # The occluders that the particle system that will use
         self.particle_system.set_particle_occluders([self.occ_one, self.occ_two, self.occ_three, self.occ_four, self.occ_five, self.occ_six])
 
+        # Sync the director's color properties with the current indices
+        self.director.p1color = self.color_rgb[self.director.index_one]
+        self.director.p2color = self.color_rgb[self.director.index_two]
+
         # The object that represents the first snake's color Emitter
         self.emitter_one = particles.Emitter()
         #This sets the average number of particles being emitted per second
@@ -122,6 +126,12 @@ class Config(Scene):
                     self.director.index_one = 0
                 else:
                     self.director.index_one += 1
+                # Skip over any color already chosen by player two
+                if self.director.index_one == self.director.index_two:
+                    if self.director.index_one == 6:
+                        self.director.index_one = 0
+                    else:
+                        self.director.index_one += 1
             # This conditional statement checks if the A key has been pressed. If it does and the index of the first
             # player's color is 0 it will change to the last index. Otherwise it will decrement
             if event.key == pygame.K_a:
@@ -129,6 +139,12 @@ class Config(Scene):
                     self.director.index_one = len(self.color_rgb) - 1
                 else:
                     self.director.index_one -= 1
+                # Skip over any color already chosen by player two
+                if self.director.index_one == self.director.index_two:
+                    if self.director.index_one == 0:
+                        self.director.index_one = len(self.color_rgb) - 1
+                    else:
+                        self.director.index_one -= 1
             # An Emitter object is made
             self.emitter_one = particles.Emitter()
             #This sets the average number of particles being emitted per second
@@ -159,6 +175,12 @@ class Config(Scene):
                     self.director.index_two = 0
                 else:
                     self.director.index_two += 1
+                # Skip over any color already chosen by player one
+                if self.director.index_two == self.director.index_one:
+                    if self.director.index_two == 6:
+                        self.director.index_two = 0
+                    else:
+                        self.director.index_two += 1
             # This conditional statement checks if the Left key has been pressed. If the index of the second player's
             # color is 0 then then it will change to the last index. Otherwise, it will decrement.
             if event.key == pygame.K_LEFT:
@@ -166,6 +188,12 @@ class Config(Scene):
                     self.director.index_two = len(self.color_rgb) - 1
                 else:
                     self.director.index_two -= 1
+                # Skip over any color already chosen by player one
+                if self.director.index_two == self.director.index_one:
+                    if self.director.index_two == 0:
+                        self.director.index_two = len(self.color_rgb) - 1
+                    else:
+                        self.director.index_two -= 1
             # An Emitter object is made
             self.emitter_two = particles.Emitter()
             #This sets the average number of particles being emitted per second
