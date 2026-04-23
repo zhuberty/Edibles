@@ -1,6 +1,7 @@
 from .math_helpers import *
 
 import random
+import pygame
 
 class Particle(object):
     def __init__(self, particle_system, position,velocity, life,colors):
@@ -50,7 +51,7 @@ class Particle(object):
         self._padlib_color_needs_update = True
         
     def draw(self, surface):
-        surface.set_at( (rndint(self.position[0]),rndint(self.position[1])), self.get_color() )
+        pygame.draw.circle(surface, self.get_color(), (rndint(self.position[0]), rndint(self.position[1])), 2)
         
 class Emitter(object):
     def __init__(self):

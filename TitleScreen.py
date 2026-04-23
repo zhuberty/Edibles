@@ -47,7 +47,7 @@ class TitleScreen(Scene):
         #This creates an Emitter object
         self.emitter = particles.Emitter()
         #This sets the average number of particles being emitted per second
-        self.emitter.set_density(100)
+        self.emitter.set_density(25)
         #This sets the angle at which the particles are being emitted as well as the angle of spread of the particles
         self.emitter.set_angle(90, 10.0)
         #This sets the range of speeds that the particles being emitted can have

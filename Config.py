@@ -66,7 +66,7 @@ class Config(Scene):
         # The object that represents the first snake's color Emitter
         self.emitter_one = particles.Emitter()
         #This sets the average number of particles being emitted per second
-        self.emitter_one.set_density(500 * self.director.scale)
+        self.emitter_one.set_density(125 * self.director.scale)
         #This sets the angle at which the particles are being emitted as well as the angle of spread of the particles
         self.emitter_one.set_angle(90, 120.0)
         #This sets the range of speeds that the particles being emitted can have
@@ -85,7 +85,7 @@ class Config(Scene):
         # The object that represents the first snake's color Emitter
         self.emitter_two = particles.Emitter()
         #This sets the average number of particles being emitted per second
-        self.emitter_two.set_density(500 * self.director.scale)
+        self.emitter_two.set_density(125 * self.director.scale)
         #This sets the angle at which the particles are being emitted as well as the angle of spread of the particles
         self.emitter_two.set_angle(90, 120.0)
         #This sets the range of speeds that the particles being emitted can have
@@ -148,7 +148,7 @@ class Config(Scene):
             # An Emitter object is made
             self.emitter_one = particles.Emitter()
             #This sets the average number of particles being emitted per second
-            self.emitter_one.set_density(500 * self.director.scale)
+            self.emitter_one.set_density(125 * self.director.scale)
             # This sets the angle at which the particles are being emitted as well as the angle of spread of the particles
             self.emitter_one.set_angle(90, 120.0)
             # This sets the range of speeds that the particles being emitted can have
@@ -197,7 +197,7 @@ class Config(Scene):
             # An Emitter object is made
             self.emitter_two = particles.Emitter()
             #This sets the average number of particles being emitted per second
-            self.emitter_two.set_density(500 * self.director.scale)
+            self.emitter_two.set_density(125 * self.director.scale)
             # This sets the angle at which the particles are being emitted as well as the angle of spread of the particles
             self.emitter_two.set_angle(90, 120.0)
             # This sets the range of speeds that the particles being emitted can have
