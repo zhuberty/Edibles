@@ -23,7 +23,7 @@ class TitleScreen(Scene):
         # The font and size of text used for the buttons
         self.btnfont = pygame.font.Font("fonts\Condition.ttf", 22 * director.scale)
         # The font and size of the text used to write my name is the upper right corner
-        self.subfont = pygame.font.Font("fonts\Condition.ttf", 21 * director.scale)
+        self.subfont = pygame.font.Font("fonts\Condition.ttf", 14 * director.scale)
         # Creates a surface on which the specified text is printed using the font specified in this case "titlefont"
         self.text = self.titlefont.render("Edibles", True, (49, 167, 255))
         # This is a rectangle object with the size being the same as the size of the game window size
@@ -145,15 +145,19 @@ class TitleScreen(Scene):
         #Fills the screen with black in order to erase all that was printed in the previous frame
         screen.fill((0, 0, 0))
 
-        # A surface with the text "By: Isaiah Poole" is created using the subfont font, the color being set to a red shade
-        self.text = self.subfont.render("By: Isaiah Poole", True, (255, 44, 44))
-        # The text is printed to the screen with the specified coordinates
-        screen.blit(self.text, self.text.get_rect(right=self.screen_rect.right - 6 * self.director.scale, bottom=self.screen_rect.top + 24 * self.director.scale))
+        # Red shadow for line 1: "by: isaiah poole"
+        self.text = self.subfont.render("by: isaiah poole", True, (255, 44, 44))
+        screen.blit(self.text, self.text.get_rect(centerx=self.screen_rect.centerx + 1, bottom=self.screen_rect.bottom - 18 * self.director.scale + 1))
+        # Blue text for line 1: "by: isaiah poole"
+        self.text = self.subfont.render("by: isaiah poole", True, (49, 167, 255))
+        screen.blit(self.text, self.text.get_rect(centerx=self.screen_rect.centerx, bottom=self.screen_rect.bottom - 18 * self.director.scale))
 
-        # A surface with the text "By: Isaiah Poole" is created using the subfont font, the color being set to a blue shade
-        self.text = self.subfont.render("By: Isaiah Poole", True, (49, 167, 255))
-        # The text is printed to the screen with the specified coordinates
-        screen.blit(self.text, self.text.get_rect(right=self.screen_rect.right - 7))
+        # Red shadow for line 2: "modded by: ely arcade club"
+        self.text = self.subfont.render("modded by: ely arcade club", True, (255, 44, 44))
+        screen.blit(self.text, self.text.get_rect(centerx=self.screen_rect.centerx + 1, bottom=self.screen_rect.bottom - 4 * self.director.scale + 1))
+        # Blue text for line 2: "modded by: ely arcade club"
+        self.text = self.subfont.render("modded by: ely arcade club", True, (49, 167, 255))
+        screen.blit(self.text, self.text.get_rect(centerx=self.screen_rect.centerx, bottom=self.screen_rect.bottom - 4 * self.director.scale))
 
         # A surface with the text "By: Isaiah Poole" is created using the titlefont, the color being set to a red shade
         self.text = self.titlefont.render("Edibles", True, (255, 44, 44))
