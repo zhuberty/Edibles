@@ -19,9 +19,54 @@ The encoder uses the DragonRise chipset and is reported as:
                but only 0-7 are wired to physical buttons)
 
 Direction detection uses a threshold of ±0.5 on axes 0 and 1.
+
+Unique identification
+---------------------
+Both Zero Delay encoders report the same USB GUID (identical chipset),
+so the GUID alone cannot distinguish Player 1 from Player 2.
+
+Instead we use the **USB physical port path** read from the Linux sysfs
+filesystem (e.g. "2-1.3" or "3-2").  This path is stable across reboots
+as long as the encoder stays plugged into the same physical USB port.
+
+The path is resolved by following the symlink for /sys/class/input/jsN
+and extracting the USB bus/port segment from the resolved path.
 """
 
+import os
+import re
 import pygame
+
+
+# ---------------------------------------------------------------------------
+# Module-level helper: USB port path resolution (Linux sysfs)
+# ---------------------------------------------------------------------------
+
+def _get_usb_port_path(joystick_index: int) -> str:
+    """
+    Return the stable USB physical-port path for joystick index N.
+
+    On Linux, /sys/class/input/jsN is a symlink whose resolved path contains
+    the USB bus and port numbers, e.g.:
+      /sys/devices/pci.../usb2/2-1/2-1.3/2-1.3:1.0/.../input/inputX/jsN
+
+    We extract the segment that looks like "2-1.3" or "3-2" — the USB port
+    path — which is stable across reboots for a given physical USB socket.
+
+    Returns an empty string if the path cannot be determined (non-Linux,
+    permission error, or unexpected sysfs layout).
+    """
+    sysfs_path = f"/sys/class/input/js{joystick_index}"
+    try:
+        resolved = os.path.realpath(sysfs_path)
+        # The USB port segment looks like "2-1.3" or "3-2" — a digit, a dash,
+        # then one or more dot-separated numbers.
+        match = re.search(r'/(\d+-[\d.]+)/\d+-[\d.]+:\d+\.\d+/', resolved)
+        if match:
+            return match.group(1)
+    except OSError:
+        pass
+    return ""
 
 
 # Direction constants returned by get_direction()
@@ -70,6 +115,36 @@ class EncoderDevice:
     def name(self) -> str:
         """The raw device name reported by pygame / the OS."""
         return self._joystick.get_name()
+
+    @property
+    def guid(self) -> str:
+        """
+        The SDL/pygame GUID for this joystick.
+
+        NOTE: Both Zero Delay encoders share the same GUID because they use
+        identical DragonRise chipsets.  Use usb_port_path for a stable,
+        per-device identifier instead.
+        """
+        try:
+            return self._joystick.get_guid()
+        except AttributeError:
+            return ""
+
+    @property
+    def usb_port_path(self) -> str:
+        """
+        The stable USB physical-port path for this encoder (Linux only).
+
+        Reads the sysfs symlink for /sys/class/input/jsN and extracts the
+        USB bus/port segment, e.g. "2-1.3" or "3-2".
+
+        This value is the same every time the encoder is plugged into the
+        same physical USB port, making it suitable as a persistent unique ID.
+
+        Returns an empty string on non-Linux systems or if the path cannot
+        be determined.
+        """
+        return _get_usb_port_path(self._index)
 
     # ------------------------------------------------------------------
     # Direction reading
@@ -150,12 +225,14 @@ class EncoderDevice:
     def info(self) -> dict:
         """Return a dict with device diagnostics (useful for debugging)."""
         return {
-            "label":       self.label,
-            "name":        self.name,
-            "index":       self._index,
-            "num_hats":    self._num_hats,
-            "num_axes":    self._num_axes,
-            "num_buttons": self._num_buttons,
+            "label":         self.label,
+            "name":          self.name,
+            "index":         self._index,
+            "guid":          self.guid,
+            "usb_port_path": self.usb_port_path,
+            "num_hats":      self._num_hats,
+            "num_axes":      self._num_axes,
+            "num_buttons":   self._num_buttons,
         }
 
     def __repr__(self) -> str:

@@ -12,20 +12,31 @@ If you have other joysticks/gamepads connected, they will be ignored
 unless you set strict_filter=False, in which case ALL joysticks are
 treated as encoders.
 
+Player assignment
+-----------------
+Because both encoders share the same USB GUID (identical DragonRise
+chipset), EncoderManager uses the saved player map from
+encoder_player_map.json (written by encoder_setup.py) to label each
+device "Player 1" or "Player 2" based on its physical USB port path.
+
+If no config file exists the encoders are labelled in discovery order
+("Encoder 1", "Encoder 2") and a warning is printed.
+
 Usage
 -----
     manager = EncoderManager()
     manager.init()
 
-    encoder1 = manager.get_encoder(0)   # first encoder
-    encoder2 = manager.get_encoder(1)   # second encoder
+    player1 = manager.get_player(1)   # encoder assigned to Player 1
+    player2 = manager.get_player(2)   # encoder assigned to Player 2
 
-    direction = encoder1.get_direction()
-    buttons   = encoder1.get_all_buttons()
+    direction = player1.get_direction()
+    buttons   = player1.get_all_buttons()
 """
 
 import pygame
 from .encoder_device import EncoderDevice
+from .encoder_setup import load_player_map
 
 
 # Substrings found in the device name reported by the Zero Delay encoder.
@@ -59,13 +70,17 @@ class EncoderManager:
         self._strict_filter = strict_filter
         self._encoders: list[EncoderDevice] = []
 
+        # player_number (1 or 2) → EncoderDevice
+        self._player_map: dict[int, EncoderDevice] = {}
+
     # ------------------------------------------------------------------
     # Initialisation
     # ------------------------------------------------------------------
 
     def init(self) -> None:
         """
-        Initialise pygame's joystick subsystem and discover all encoders.
+        Initialise pygame's joystick subsystem, discover all encoders, and
+        apply the saved player assignment (if available).
 
         Call this once after pygame.init() has been called.
         """
@@ -73,6 +88,7 @@ class EncoderManager:
             pygame.joystick.init()
 
         self._encoders.clear()
+        self._player_map.clear()
         total = pygame.joystick.get_count()
 
         encoder_number = 1
@@ -99,8 +115,67 @@ class EncoderManager:
             for enc in self._encoders:
                 print(f"[arcade_encoders] Found: {enc}")
 
+        # Apply player assignment from saved config
+        self._apply_player_map()
+
+    def _apply_player_map(self) -> None:
+        """
+        Load encoder_player_map.json and assign player labels to encoders.
+
+        Matches each encoder's USB port path against the saved mapping.
+        If the config is missing or a port path is not found, falls back to
+        discovery order and prints a warning.
+        """
+        saved = load_player_map()
+
+        if not saved:
+            print(
+                "[arcade_encoders] No player map found. "
+                "Run 'python -m arcade_encoders.encoder_setup' to assign "
+                "Player 1 and Player 2 to specific controllers."
+            )
+            # Fall back: assign in discovery order
+            for i, enc in enumerate(self._encoders):
+                player_num = i + 1
+                enc.label = f"Player {player_num}"
+                self._player_map[player_num] = enc
+            return
+
+        p1_port = saved.get("player1", "")
+        p2_port = saved.get("player2", "")
+
+        assigned = {}  # port_path → player_number
+        if p1_port:
+            assigned[p1_port] = 1
+        if p2_port:
+            assigned[p2_port] = 2
+
+        unmatched = []
+        for enc in self._encoders:
+            port = enc.usb_port_path
+            if port in assigned:
+                player_num = assigned[port]
+                enc.label = f"Player {player_num}"
+                self._player_map[player_num] = enc
+                print(
+                    f"[arcade_encoders] {enc.label} ← USB port {port}"
+                )
+            else:
+                unmatched.append(enc)
+
+        if unmatched:
+            print(
+                "[arcade_encoders] WARNING: Some encoders could not be matched "
+                "to the saved player map (USB port changed?):\n"
+                + "\n".join(
+                    f"  {enc.name!r} at USB port {enc.usb_port_path or 'unknown'}"
+                    for enc in unmatched
+                )
+                + "\n  Re-run 'python -m arcade_encoders.encoder_setup' to fix."
+            )
+
     # ------------------------------------------------------------------
-    # Access
+    # Access by discovery order
     # ------------------------------------------------------------------
 
     def get_encoder(self, index: int) -> EncoderDevice:
@@ -115,6 +190,27 @@ class EncoderManager:
                 f"({len(self._encoders)} encoder(s) found)"
             )
         return self._encoders[index]
+
+    # ------------------------------------------------------------------
+    # Access by player number
+    # ------------------------------------------------------------------
+
+    def get_player(self, player_number: int) -> EncoderDevice:
+        """
+        Return the encoder assigned to *player_number* (1 or 2).
+
+        Uses the saved player map from encoder_player_map.json.
+        Falls back to discovery order if no map is available.
+
+        Raises KeyError if the player number has no assigned encoder.
+        """
+        if player_number not in self._player_map:
+            raise KeyError(
+                f"No encoder assigned to Player {player_number}. "
+                f"Run 'python -m arcade_encoders.encoder_setup' to set up "
+                f"player assignments."
+            )
+        return self._player_map[player_number]
 
     @property
     def encoders(self) -> list:

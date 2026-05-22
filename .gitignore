@@ -9,3 +9,7 @@ noNeed/
 *.pyc
 *.dinglehopper
 .venv
+
+# Arcade encoder player assignment — machine-specific, not committed
+# Re-generate with: python -m arcade_encoders.encoder_setup
+arcade_encoders/encoder_player_map.json
