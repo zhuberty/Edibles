@@ -37,6 +37,36 @@ class Director:
         # An object that keeps track of time
         self.clock = pygame.time.Clock()
 
+        # --- Arcade encoder support ---
+        # Try to initialise the EncoderManager. If no encoders are connected
+        # (or the module is unavailable) the game falls back to keyboard-only.
+        self.encoder_manager = None
+        try:
+            from arcade_encoders import EncoderManager
+            mgr = EncoderManager()
+            mgr.init()
+            if mgr.count > 0:
+                self.encoder_manager = mgr
+                print(f"[Director] Arcade encoders ready: {mgr.count} device(s) found.")
+                # Hide the mouse cursor so it doesn't interfere with menu
+                # selection when the arcade joystick is the primary input.
+                pygame.mouse.set_visible(False)
+            else:
+                print("[Director] No arcade encoders detected – keyboard-only mode.")
+        except Exception as e:
+            print(f"[Director] Encoder init skipped: {e}")
+
+    # Convenience helpers so scenes can query encoders without boilerplate.
+
+    def get_encoder_player(self, player_number: int):
+        """Return the EncoderDevice for *player_number* (1 or 2), or None."""
+        if self.encoder_manager is None:
+            return None
+        try:
+            return self.encoder_manager.get_player(player_number)
+        except KeyError:
+            return None
+
     # The Game Loop
     def loop(self):
 

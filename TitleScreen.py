@@ -44,6 +44,11 @@ class TitleScreen(Scene):
         # This changes the center of the Configuration / Control Button's rectangle
         self.configbtn.center = (self.screen_rect.centerx, self.screen_rect.centery / 2 + 210 * self.director.scale)
 
+        # --- Encoder state tracking ---
+        # Joystick up/down navigates menu items; button 0 selects.
+        self._prev_enc_dir = "none"
+        self._prev_enc_btn0 = False
+
         #This creates an Emitter object
         self.emitter = particles.Emitter()
         #This sets the average number of particles being emitted per second
@@ -68,6 +73,53 @@ class TitleScreen(Scene):
         self.particle_system.update(1.0 / 60.0)
         # This sets the fps(frames per second) of the game
         self.director.fps = 30
+
+        # Suppress the mouse-cursor particle trail when encoders are active
+        # (the cursor is hidden so the effect would just fire at 0,0).
+        if self.director.encoder_manager is not None:
+            self.emitter.set_density(0)
+        else:
+            self.emitter.set_density(25)
+
+        # --- Arcade encoder input (Player 1 navigates the title menu) ---
+        # Any connected encoder can navigate and select menu items.
+        # Joystick UP/DOWN → move selection  |  Button 0 → confirm selection
+        enc = self.director.get_encoder_player(1)
+        if enc is None:
+            # Fall back to encoder 2 if player 1 is not mapped
+            enc = self.director.get_encoder_player(2)
+        if enc is not None:
+            pygame.event.pump()
+
+            # Joystick navigation (edge-triggered)
+            direction = enc.get_direction()
+            if direction != self._prev_enc_dir:
+                if direction == "down":
+                    if self.btnnum == 3:
+                        self.btnnum = 1
+                    else:
+                        self.btnnum += 1
+                elif direction == "up":
+                    if self.btnnum == 1:
+                        self.btnnum = 3
+                    else:
+                        self.btnnum -= 1
+            self._prev_enc_dir = direction
+
+            # Button 0 → select highlighted menu item (edge-triggered)
+            btn0 = enc.get_button(0)
+            if btn0 and not self._prev_enc_btn0:
+                if self.btnnum == 1:
+                    pygame.mixer.music.load("music/snakesong.wav")
+                    pygame.mixer.music.play(-1)
+                    self.director.change_scene(self.director.scenes[1])
+                elif self.btnnum == 2:
+                    pygame.mixer.music.load("music/snakesong.wav")
+                    pygame.mixer.music.play(-1)
+                    self.director.change_scene(self.director.scenes[2])
+                elif self.btnnum == 3:
+                    self.director.change_scene(self.director.scenes[3])
+            self._prev_enc_btn0 = btn0
 
     def on_event(self, event):
         # Grabs the X and Y position of the mouse cursor, respectively
@@ -109,35 +161,40 @@ class TitleScreen(Scene):
         if event.type == pygame.KEYDOWN and (event.key == pygame.K_RETURN or event.key == pygame.K_SPACE) and self.btnnum == 3:
             self.director.change_scene(self.director.scenes[3])
 
-        # This checks if the mouse is within the boundaries of the One Player Button's rectangle and if it is it then
-        # changes the highlighted button index to 1. If the player clicks the button it will change the scene to the
-        # second scene in the director's scene array, the One Player Mode
-        if mx > self.oneplyrbtn.left and mx < self.oneplyrbtn.right and my < self.oneplyrbtn.bottom and my > self.oneplyrbtn.top:
-            self.btnnum = 1
-            if event.type == MOUSEBUTTONDOWN and event.button == 1:
-                # Loads the song
-                pygame.mixer.music.load("music/snakesong.wav")
-                # Plays the loaded song indefinitely
-                pygame.mixer.music.play(-1)
-                self.director.change_scene(self.director.scenes[1])
-        # This checks if the mouse is within the boundaries of the Two Player Button's rectangle and if it is it then
-        # changes the highlighted button index to 2. If the player clicks the button it will change the scene to the
-        # third scene in the director's scene array, the Two Player Mode
-        if mx > self.twoplyrbtn.left and mx < self.twoplyrbtn.right and my < self.twoplyrbtn.bottom and my > self.twoplyrbtn.top:
-            self.btnnum = 2
-            if event.type == MOUSEBUTTONDOWN and event.button == 1:
-                self.director.change_scene(self.director.scenes[2])
-                # Loads the song
-                pygame.mixer.music.load("music/snakesong.wav")
-                # Plays the loaded song indefinitely
-                pygame.mixer.music.play(-1)
-        # This checks if the mouse is within the boundaries of the Configuration / Control Button's rectangle and if it is it then
-        # changes the highlighted button index to 3. If the player clicks the button it will change the scene to the
-        # fourth scene in the director's scene array, the Configuration / Controls scene
-        if mx > self.configbtn.left and mx < self.configbtn.right and my < self.configbtn.bottom and my > self.configbtn.top:
-            self.btnnum = 3
-            if event.type == MOUSEBUTTONDOWN and event.button == 1:
-                self.director.change_scene(self.director.scenes[3])
+        # Mouse-based button hover and click.
+        # When arcade encoders are active the mouse cursor is hidden and its
+        # resting position (usually 0,0) must not override the joystick
+        # selection, so mouse hover is skipped entirely in encoder mode.
+        if self.director.encoder_manager is None:
+            # This checks if the mouse is within the boundaries of the One Player Button's rectangle and if it is it then
+            # changes the highlighted button index to 1. If the player clicks the button it will change the scene to the
+            # second scene in the director's scene array, the One Player Mode
+            if mx > self.oneplyrbtn.left and mx < self.oneplyrbtn.right and my < self.oneplyrbtn.bottom and my > self.oneplyrbtn.top:
+                self.btnnum = 1
+                if event.type == MOUSEBUTTONDOWN and event.button == 1:
+                    # Loads the song
+                    pygame.mixer.music.load("music/snakesong.wav")
+                    # Plays the loaded song indefinitely
+                    pygame.mixer.music.play(-1)
+                    self.director.change_scene(self.director.scenes[1])
+            # This checks if the mouse is within the boundaries of the Two Player Button's rectangle and if it is it then
+            # changes the highlighted button index to 2. If the player clicks the button it will change the scene to the
+            # third scene in the director's scene array, the Two Player Mode
+            if mx > self.twoplyrbtn.left and mx < self.twoplyrbtn.right and my < self.twoplyrbtn.bottom and my > self.twoplyrbtn.top:
+                self.btnnum = 2
+                if event.type == MOUSEBUTTONDOWN and event.button == 1:
+                    self.director.change_scene(self.director.scenes[2])
+                    # Loads the song
+                    pygame.mixer.music.load("music/snakesong.wav")
+                    # Plays the loaded song indefinitely
+                    pygame.mixer.music.play(-1)
+            # This checks if the mouse is within the boundaries of the Configuration / Control Button's rectangle and if it is it then
+            # changes the highlighted button index to 3. If the player clicks the button it will change the scene to the
+            # fourth scene in the director's scene array, the Configuration / Controls scene
+            if mx > self.configbtn.left and mx < self.configbtn.right and my < self.configbtn.bottom and my > self.configbtn.top:
+                self.btnnum = 3
+                if event.type == MOUSEBUTTONDOWN and event.button == 1:
+                    self.director.change_scene(self.director.scenes[3])
         # This sets the position of the emitter to be near the tip of the mouse cursor
         self.emitter.set_position([mx, my - 10])
 

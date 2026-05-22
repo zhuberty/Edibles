@@ -56,6 +56,17 @@ class EdiblesTwoPlayer(Scene):
         for i in range(1, 3):
             self.tail_2.append(Entity(self.head_2.x + 10 * i * director.scale, self.head_2.y * director.scale, 9 * director.scale, 9 * director.scale, self.director.p2color))
 
+        # --- Encoder state tracking ---
+        # Tracks the joystick direction from the previous frame for each player
+        # so we only act on a direction change (edge-trigger), not a held position.
+        self._prev_enc_dir_p1 = "none"
+        self._prev_enc_dir_p2 = "none"
+
+        # Tracks which buttons were pressed last frame to detect press edges.
+        # Button 0 → restart  |  Button 7 → back to title
+        self._prev_enc_btns_p1 = [False] * 8
+        self._prev_enc_btns_p2 = [False] * 8
+
     def on_event(self, event):
         # This conditional statement that if either the W key is pressed down and if the first player's snake
         # is not moving on the y-axis then have it start moving up on the y axis cease movement on the x axis
@@ -118,6 +129,83 @@ class EdiblesTwoPlayer(Scene):
     def on_update(self):
         # The fps (frames per second) is changed to 15
         self.director.fps = 15
+
+        # --- Arcade encoder input ---
+        pygame.event.pump()
+
+        # Player 1 encoder
+        enc1 = self.director.get_encoder_player(1)
+        if enc1 is not None:
+            # Joystick direction → snake steering (edge-triggered)
+            dir1 = enc1.get_direction()
+            if dir1 != self._prev_enc_dir_p1:
+                if dir1 == "up" and self.dy1 == 0:
+                    self.dy1 = -10 * self.director.scale
+                    self.dx1 = 0
+                elif dir1 == "down" and self.dy1 == 0:
+                    self.dy1 = 10 * self.director.scale
+                    self.dx1 = 0
+                elif dir1 == "left" and self.dx1 == 0:
+                    self.dx1 = -10 * self.director.scale
+                    self.dy1 = 0
+                elif dir1 == "right" and self.dx1 == 0:
+                    self.dx1 = 10 * self.director.scale
+                    self.dy1 = 0
+            self._prev_enc_dir_p1 = dir1
+
+            # Button presses (edge-triggered)
+            btns1 = enc1.get_all_buttons()
+            # Button 0 → restart
+            if btns1[0] and not self._prev_enc_btns_p1[0]:
+                pygame.mixer.music.stop()
+                self.director.change_scene(EdiblesTwoPlayer(self.director))
+                pygame.mixer.music.load("music/snakesong.wav")
+                pygame.mixer.music.play(-1)
+                return
+            # Button 7 → back to title
+            if btns1[7] and not self._prev_enc_btns_p1[7]:
+                self.director.change_scene(self.director.scenes[0])
+                pygame.mixer.music.stop()
+                self.director.scenes[2] = EdiblesTwoPlayer(self.director)
+                return
+            self._prev_enc_btns_p1 = list(btns1)
+
+        # Player 2 encoder
+        enc2 = self.director.get_encoder_player(2)
+        if enc2 is not None:
+            # Joystick direction → snake steering (edge-triggered)
+            dir2 = enc2.get_direction()
+            if dir2 != self._prev_enc_dir_p2:
+                if dir2 == "up" and self.dy2 == 0:
+                    self.dy2 = -10 * self.director.scale
+                    self.dx2 = 0
+                elif dir2 == "down" and self.dy2 == 0:
+                    self.dy2 = 10 * self.director.scale
+                    self.dx2 = 0
+                elif dir2 == "left" and self.dx2 == 0:
+                    self.dx2 = -10 * self.director.scale
+                    self.dy2 = 0
+                elif dir2 == "right" and self.dx2 == 0:
+                    self.dx2 = 10 * self.director.scale
+                    self.dy2 = 0
+            self._prev_enc_dir_p2 = dir2
+
+            # Button presses (edge-triggered)
+            btns2 = enc2.get_all_buttons()
+            # Button 0 → restart
+            if btns2[0] and not self._prev_enc_btns_p2[0]:
+                pygame.mixer.music.stop()
+                self.director.change_scene(EdiblesTwoPlayer(self.director))
+                pygame.mixer.music.load("music/snakesong.wav")
+                pygame.mixer.music.play(-1)
+                return
+            # Button 7 → back to title
+            if btns2[7] and not self._prev_enc_btns_p2[7]:
+                self.director.change_scene(self.director.scenes[0])
+                pygame.mixer.music.stop()
+                self.director.scenes[2] = EdiblesTwoPlayer(self.director)
+                return
+            self._prev_enc_btns_p2 = list(btns2)
 
         # This conditional statement checks to see if none of the win states have been met, and if so, execute the
         # following code

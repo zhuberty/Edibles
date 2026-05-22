@@ -110,11 +110,136 @@ class Config(Scene):
         # Boolean variable telling whether or not player one's left arrow is enlarged
         self.p2_hili_r_arrow = False
 
+        # --- Encoder state tracking ---
+        # Player 1 joystick left/right → cycle P1 color
+        # Player 2 joystick left/right → cycle P2 color
+        # Either player's button 7 → back to title
+        self._prev_enc_dir_p1 = "none"
+        self._prev_enc_dir_p2 = "none"
+        self._prev_enc_btn7_p1 = False
+        self._prev_enc_btn7_p2 = False
+
     def on_update(self):
         # Update method of the particle system
         self.particle_system.update(1.0 / 60.0)
         # Sets the fps (frames per second to 30
         self.director.fps = 30
+
+        # --- Arcade encoder input ---
+        # Player 1 joystick left/right → cycle P1 color
+        # Player 2 joystick left/right → cycle P2 color
+        # Either player's button 7 → back to title
+        pygame.event.pump()
+
+        enc1 = self.director.get_encoder_player(1)
+        if enc1 is not None:
+            dir1 = enc1.get_direction()
+            if dir1 != self._prev_enc_dir_p1:
+                changed = False
+                if dir1 == "right":
+                    if self.director.index_one == 6:
+                        self.director.index_one = 0
+                    else:
+                        self.director.index_one += 1
+                    if self.director.index_one == self.director.index_two:
+                        if self.director.index_one == 6:
+                            self.director.index_one = 0
+                        else:
+                            self.director.index_one += 1
+                    self.p1_hili_r_arrow = True
+                    self.p1_hili_l_arrow = False
+                    changed = True
+                elif dir1 == "left":
+                    if self.director.index_one == 0:
+                        self.director.index_one = len(self.color_rgb) - 1
+                    else:
+                        self.director.index_one -= 1
+                    if self.director.index_one == self.director.index_two:
+                        if self.director.index_one == 0:
+                            self.director.index_one = len(self.color_rgb) - 1
+                        else:
+                            self.director.index_one -= 1
+                    self.p1_hili_l_arrow = True
+                    self.p1_hili_r_arrow = False
+                    changed = True
+                if changed:
+                    self.director.p1color = self.color_rgb[self.director.index_one]
+                    self.emitter_one = particles.Emitter()
+                    self.emitter_one.set_density(125 * self.director.scale)
+                    self.emitter_one.set_angle(90, 120.0)
+                    self.emitter_one.set_speed([200.0, 300.0])
+                    self.emitter_one.set_life([0.3, 1.0])
+                    self.emitter_one.set_colors([self.color_rgb[self.director.index_one]])
+                    self.particle_system.set_particle_acceleration([0.0, 500.0])
+                    self.particle_system.add_emitter(self.emitter_one, "emitter_one")
+                    self.emitter_one.set_position([133 * self.director.scale, self.screen_rect.bottom - 116 * self.director.scale])
+            self._prev_enc_dir_p1 = dir1
+
+            # Button 7 → back to title (edge-triggered)
+            btn7_p1 = enc1.get_button(7)
+            if btn7_p1 and not self._prev_enc_btn7_p1:
+                self.director.change_scene(self.director.scenes[0])
+                self.p1_hili_l_arrow = False
+                self.p1_hili_r_arrow = False
+                self.p2_hili_l_arrow = False
+                self.p2_hili_r_arrow = False
+                return
+            self._prev_enc_btn7_p1 = btn7_p1
+
+        enc2 = self.director.get_encoder_player(2)
+        if enc2 is not None:
+            dir2 = enc2.get_direction()
+            if dir2 != self._prev_enc_dir_p2:
+                changed = False
+                if dir2 == "right":
+                    if self.director.index_two == 6:
+                        self.director.index_two = 0
+                    else:
+                        self.director.index_two += 1
+                    if self.director.index_two == self.director.index_one:
+                        if self.director.index_two == 6:
+                            self.director.index_two = 0
+                        else:
+                            self.director.index_two += 1
+                    self.p2_hili_r_arrow = True
+                    self.p2_hili_l_arrow = False
+                    changed = True
+                elif dir2 == "left":
+                    if self.director.index_two == 0:
+                        self.director.index_two = len(self.color_rgb) - 1
+                    else:
+                        self.director.index_two -= 1
+                    if self.director.index_two == self.director.index_one:
+                        if self.director.index_two == 0:
+                            self.director.index_two = len(self.color_rgb) - 1
+                        else:
+                            self.director.index_two -= 1
+                    self.p2_hili_l_arrow = True
+                    self.p2_hili_r_arrow = False
+                    changed = True
+                if changed:
+                    self.director.p2color = self.color_rgb[self.director.index_two]
+                    self.emitter_two = particles.Emitter()
+                    self.emitter_two.set_density(125 * self.director.scale)
+                    self.emitter_two.set_angle(90, 120.0)
+                    self.emitter_two.set_speed([200.0, 300.0])
+                    self.emitter_two.set_life([0.3, 1.0])
+                    self.emitter_two.set_colors([self.color_rgb[self.director.index_two]])
+                    self.particle_system.set_particle_acceleration([0.0, 500.0])
+                    self.particle_system.add_emitter(self.emitter_two, "emitter_two")
+                    self.emitter_two.set_position([267 * self.director.scale, self.screen_rect.bottom - 116 * self.director.scale])
+            self._prev_enc_dir_p2 = dir2
+
+            # Button 7 → back to title (edge-triggered)
+            btn7_p2 = enc2.get_button(7)
+            if btn7_p2 and not self._prev_enc_btn7_p2:
+                self.director.change_scene(self.director.scenes[0])
+                self.p1_hili_l_arrow = False
+                self.p1_hili_r_arrow = False
+                self.p2_hili_l_arrow = False
+                self.p2_hili_r_arrow = False
+                return
+            self._prev_enc_btn7_p2 = btn7_p2
 
     def on_event(self, event):
         # This conditional statement checks if a key has been pressed down

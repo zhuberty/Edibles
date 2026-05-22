@@ -39,6 +39,15 @@ class EdiblesOnePlayer(Scene):
         for i in range(1, 3):
             self.tail.append(Entity(self.head.x - 10 * i * director.scale, self.head.y * director.scale, 9 * director.scale, 9 * director.scale, self.director.p1color))
 
+        # --- Encoder state tracking ---
+        # Tracks the joystick direction from the previous frame so we only
+        # act on a direction change (edge-trigger), not a held position.
+        self._prev_enc_direction = "none"
+
+        # Tracks which buttons were pressed last frame to detect press edges.
+        # Button 0 → restart  |  Button 7 → back to title
+        self._prev_enc_buttons = [False] * 8
+
     def on_event(self, event):
         # This conditional statement that if either the W or Up key is pressed down and if the snake is not moving on
         # the y-axis then have it start moving up on the y axis cease movement on the x axis
@@ -82,6 +91,45 @@ class EdiblesOnePlayer(Scene):
     def on_update(self):
         # The fps (frames per second) is set to 15
         self.director.fps = 15
+
+        # --- Arcade encoder input (Player 1) ---
+        enc = self.director.get_encoder_player(1)
+        if enc is not None:
+            pygame.event.pump()
+
+            # --- Joystick direction → snake steering (edge-triggered) ---
+            direction = enc.get_direction()
+            if direction != self._prev_enc_direction:
+                if direction == "up" and self.dy == 0:
+                    self.dy = -10 * self.director.scale
+                    self.dx = 0
+                elif direction == "down" and self.dy == 0:
+                    self.dy = 10 * self.director.scale
+                    self.dx = 0
+                elif direction == "left" and self.dx == 0:
+                    self.dx = -10 * self.director.scale
+                    self.dy = 0
+                elif direction == "right" and self.dx == 0:
+                    self.dx = 10 * self.director.scale
+                    self.dy = 0
+            self._prev_enc_direction = direction
+
+            # --- Button presses (edge-triggered) ---
+            buttons = enc.get_all_buttons()
+            # Button 0 → restart (same as R key)
+            if buttons[0] and not self._prev_enc_buttons[0]:
+                pygame.mixer.music.stop()
+                self.director.change_scene(EdiblesOnePlayer(self.director))
+                pygame.mixer.music.load("music/snakesong.wav")
+                pygame.mixer.music.play(-1)
+                return  # scene has changed; stop processing this frame
+            # Button 7 → back to title (same as Ctrl key)
+            if buttons[7] and not self._prev_enc_buttons[7]:
+                self.director.change_scene(self.director.scenes[0])
+                pygame.mixer.music.stop()
+                self.director.scenes[1] = EdiblesOnePlayer(self.director)
+                return  # scene has changed; stop processing this frame
+            self._prev_enc_buttons = list(buttons)
 
         # Calling of the is_collide function
         self.is_collide()
