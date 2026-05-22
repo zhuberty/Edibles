@@ -15,9 +15,9 @@ class Director:
         # Sets the string that will be displayed on the title bar of the window a.k.a. the Game Name
         pygame.display.set_caption("Edibles")
         # Sets the icon that will be displayed on the title bar
-        pygame.display.set_icon(pygame.image.load("images\ed.png"))
+        pygame.display.set_icon(pygame.image.load("images/ed.png"))
         # Sets the default font and size of the font
-        self.font = pygame.font.Font("fonts\Condition.ttf", 45 * self.scale)
+        self.font = pygame.font.Font("fonts/Condition.ttf", 45 * self.scale)
         # Takes the array of scenes given by the scenes parameter and sets it as the scenes the director will use
         self.scenes = scenes
         # The current scene of the game

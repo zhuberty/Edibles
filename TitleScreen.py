@@ -19,11 +19,11 @@ class TitleScreen(Scene):
         # Calls the constructor of the Scene class
         Scene.__init__(self, director)
         #The font and size of the titlefont, the "edibles" text on the title screen
-        self.titlefont = pygame.font.Font("fonts\Condition.ttf", 65 * director.scale)
+        self.titlefont = pygame.font.Font("fonts/Condition.ttf", 65 * director.scale)
         # The font and size of text used for the buttons
-        self.btnfont = pygame.font.Font("fonts\Condition.ttf", 22 * director.scale)
+        self.btnfont = pygame.font.Font("fonts/Condition.ttf", 22 * director.scale)
         # The font and size of the text used to write my name is the upper right corner
-        self.subfont = pygame.font.Font("fonts\Condition.ttf", 14 * director.scale)
+        self.subfont = pygame.font.Font("fonts/Condition.ttf", 14 * director.scale)
         # Creates a surface on which the specified text is printed using the font specified in this case "titlefont"
         self.text = self.titlefont.render("Edibles", True, (49, 167, 255))
         # This is a rectangle object with the size being the same as the size of the game window size
@@ -92,7 +92,7 @@ class TitleScreen(Scene):
         # change the scene to the second scene in the director's scenes array, the One Player Mode
         if event.type == pygame.KEYDOWN and (event.key == pygame.K_RETURN or event.key == pygame.K_SPACE) and self.btnnum == 1:
             # Loads the song
-            pygame.mixer.music.load("music\snakesong.wav")
+            pygame.mixer.music.load("music/snakesong.wav")
             # Plays the loaded song indefinitely
             pygame.mixer.music.play(-1)
             self.director.change_scene(self.director.scenes[1])
@@ -100,7 +100,7 @@ class TitleScreen(Scene):
         # change the scene to the third scene in the director's scenes array, the Two Player Mode
         if event.type == pygame.KEYDOWN and (event.key == pygame.K_RETURN or event.key == pygame.K_SPACE) and self.btnnum == 2:
             # Loads the song
-            pygame.mixer.music.load("music\snakesong.wav")
+            pygame.mixer.music.load("music/snakesong.wav")
             # Plays the loaded song indefinitely
             pygame.mixer.music.play(-1)
             self.director.change_scene(self.director.scenes[2])
@@ -116,7 +116,7 @@ class TitleScreen(Scene):
             self.btnnum = 1
             if event.type == MOUSEBUTTONDOWN and event.button == 1:
                 # Loads the song
-                pygame.mixer.music.load("music\snakesong.wav")
+                pygame.mixer.music.load("music/snakesong.wav")
                 # Plays the loaded song indefinitely
                 pygame.mixer.music.play(-1)
                 self.director.change_scene(self.director.scenes[1])
@@ -128,7 +128,7 @@ class TitleScreen(Scene):
             if event.type == MOUSEBUTTONDOWN and event.button == 1:
                 self.director.change_scene(self.director.scenes[2])
                 # Loads the song
-                pygame.mixer.music.load("music\snakesong.wav")
+                pygame.mixer.music.load("music/snakesong.wav")
                 # Plays the loaded song indefinitely
                 pygame.mixer.music.play(-1)
         # This checks if the mouse is within the boundaries of the Configuration / Control Button's rectangle and if it is it then

@@ -42,13 +42,13 @@ class Config(Scene):
         self.occ_six.set_bounce(0.6)
 
         # The font and size of the text that will be used to display text on the screen
-        self.plyr = pygame.font.Font("fonts\Condition.ttf", 20 * director.scale)
+        self.plyr = pygame.font.Font("fonts/Condition.ttf", 20 * director.scale)
         # The font and size of the text that will be used to display text on the screen
-        self.colortxt = pygame.font.Font("fonts\Condition.ttf", 18 * director.scale)
+        self.colortxt = pygame.font.Font("fonts/Condition.ttf", 18 * director.scale)
         # The font and size of the text that will be used to display text on the screen
-        self.ctrl = pygame.font.Font("fonts\Condition.ttf", 30 * director.scale)
+        self.ctrl = pygame.font.Font("fonts/Condition.ttf", 30 * director.scale)
         # The font and size of the text that will be used to display text on the screen
-        self.p = pygame.font.Font("fonts\Condition.ttf", 24 * director.scale)
+        self.p = pygame.font.Font("fonts/Condition.ttf", 24 * director.scale)
         # The font and size of the text that will be used to display text on the screen
         self.txt = director.font.render("Player One Controls", True, (255, 255, 255))
 
